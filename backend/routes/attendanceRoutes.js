@@ -1,17 +1,36 @@
 const express = require('express');
 const router = express.Router();
 
-// Temporary test route
+// Test route
 router.get('/test', (req, res) => {
   res.json({ message: 'Attendance routes working!' });
 });
 
-router.post('/checkin', (req, res) => {
-  res.json({ message: 'Check-in endpoint working!' });
+// Get my attendance
+router.get('/my/:employeeId', (req, res) => {
+  res.json({ 
+    success: true, 
+    data: [],
+    stats: { totalDays: 0, presentDays: 0, attendanceRate: 0 }
+  });
 });
 
+// Check-in
+router.post('/checkin', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Check-in successful',
+    data: { checkIn: new Date() }
+  });
+});
+
+// Check-out
 router.post('/checkout', (req, res) => {
-  res.json({ message: 'Check-out endpoint working!' });
+  res.json({ 
+    success: true, 
+    message: 'Check-out successful',
+    data: { checkOut: new Date() }
+  });
 });
 
 module.exports = router;
