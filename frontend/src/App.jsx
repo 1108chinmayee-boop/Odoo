@@ -144,16 +144,142 @@ function Login() {
 
         </form>
 
-        <p className="mt-7 text-center text-lg text-gray-500">
-          Don't have an account?{" "}
+        <div className="mt-7 text-center">
 
-          <Link
-            to="/signup"
-            className="font-semibold text-blue-600 hover:underline"
-          >
-            Sign Up
-          </Link>
+  <Link
+    to="/forgot-password"
+    className="text-sm font-medium text-blue-600 hover:underline"
+  >
+    Forgot Password?
+  </Link>
+
+  <p className="mt-3 text-lg text-gray-500">
+    Don't have an account?{" "}
+
+    <Link
+      to="/signup"
+      className="font-semibold text-blue-600 hover:underline"
+    >
+      Sign Up
+    </Link>
+  </p>
+
+</div>
+
+      </div>
+
+    </div>
+  );
+}
+/* =========================================================
+   FORGOT PASSWORD PAGE
+========================================================= */
+
+function ForgotPassword() {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setMessage("");
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Unable to process request");
+        return;
+      }
+
+      setMessage(
+        data.message ||
+          "If the email exists, a password reset link has been sent."
+      );
+    } catch (error) {
+      console.error(error);
+
+      setError(
+        "Cannot connect to backend. Make sure the backend is running."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
+
+      <div className="w-full max-w-xl rounded-2xl bg-white p-10 shadow-xl">
+
+        <h1 className="text-3xl font-bold text-blue-600">
+          Forgot Password?
+        </h1>
+
+        <p className="mt-2 text-gray-500">
+          Enter your email and we'll help you reset your password.
         </p>
+
+        <form onSubmit={handleSubmit} className="mt-8">
+
+          <label className="block mb-2 font-medium">
+            Email
+          </label>
+
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            required
+            className="w-full rounded-xl border border-gray-300 px-5 py-4 focus:border-blue-500 focus:outline-none"
+          />
+
+          {error && (
+            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-green-600">
+              {message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Sending..." : "Send Reset Link"}
+          </button>
+
+        </form>
+
+        <button
+          onClick={() => navigate("/login")}
+          className="mt-6 w-full text-center text-blue-600 hover:underline"
+        >
+          Back to Login
+        </button>
 
       </div>
 
@@ -161,7 +287,151 @@ function Login() {
   );
 }
 
+/* =========================================================
+   RESET PASSWORD PAGE
+========================================================= */
 
+function ResetPassword() {
+  const { token } = useParams();
+  const navigate = useNavigate();
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setMessage("");
+    setError("");
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/auth/reset-password/${token}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Unable to reset password.");
+        return;
+      }
+
+      setMessage("Password reset successfully!");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (error) {
+      console.error(error);
+
+      setError(
+        "Cannot connect to backend. Make sure the backend is running."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
+
+      <div className="w-full max-w-xl rounded-2xl bg-white p-10 shadow-xl">
+
+        <h1 className="text-3xl font-bold text-blue-600">
+          Reset Password
+        </h1>
+
+        <p className="mt-2 text-gray-500">
+          Create a new password for your Dayflow account.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-8">
+
+          <label className="block mb-2 font-medium">
+            New Password
+          </label>
+
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter new password"
+            required
+            className="w-full rounded-xl border border-gray-300 px-5 py-4 focus:border-blue-500 focus:outline-none"
+          />
+
+          <label className="block mb-2 mt-6 font-medium">
+            Confirm Password
+          </label>
+
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm new password"
+            required
+            className="w-full rounded-xl border border-gray-300 px-5 py-4 focus:border-blue-500 focus:outline-none"
+          />
+
+          {error && (
+            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-green-600">
+              {message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Resetting..." : "Reset Password"}
+          </button>
+
+        </form>
+
+        <button
+          onClick={() => navigate("/login")}
+          className="mt-6 w-full text-center text-blue-600 hover:underline"
+        >
+          Back to Login
+        </button>
+
+      </div>
+
+    </div>
+  );
+}
 /* =========================================================
    SIGNUP PAGE
 ========================================================= */
@@ -503,12 +773,28 @@ function Profile() {
           <div className="flex flex-col items-start gap-5 md:flex-row md:items-center">
 
             {/* Avatar */}
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-4xl font-bold text-blue-600">
+            {/* Avatar */}
+<div className="relative">
 
-              {employee?.firstName?.charAt(0)?.toUpperCase() || "E"}
+  {employee?.profilePicture ? (
+    <img
+      src={employee.profilePicture}
+      alt="Profile"
+      className="h-24 w-24 rounded-full object-cover"
+    />
+  ) : (
+    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-4xl font-bold text-blue-600">
+      {employee?.firstName?.charAt(0)?.toUpperCase() || "E"}
+    </div>
+  )}
 
-            </div>
-
+</div>
+<button
+  onClick={() => navigate("/edit-profile")}
+  className="mt-3 text-sm font-medium text-blue-600 hover:underline"
+>
+  Change photo
+</button>
             {/* Name */}
             <div>
 
@@ -1099,6 +1385,18 @@ function App() {
           path="/login"
           element={<Login />}
         />
+
+        <Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+
+  
+/>
+
+<Route
+  path="/reset-password/:token"
+  element={<ResetPassword />}
+/>
 
         {/* Signup */}
         <Route
